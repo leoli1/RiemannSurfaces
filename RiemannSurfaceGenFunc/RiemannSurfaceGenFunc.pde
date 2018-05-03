@@ -7,38 +7,50 @@ ArrayList<Complex[]> unitCircleGraph = new ArrayList<Complex[]>();
 
 
 // sqrt(1-z^2)
-/*
+
 float minIm = -1;
 float maxIm = 1;
 float minRe = -1;
 float maxRe = 1;
 int steps = 50;
 int Nroot = 2; // N-th root
-Complex[] function(Complex input){ // sqrt(1-z^2)
-  return getRoots(Complex.Sub(new Complex(-1,0), Complex.Pow(input,2)), 2);
-}*/
-float minIm = -PI/4;
-float maxIm = PI/4;
-float minRe = -PI/4;
-float maxRe = PI/4;
-int steps = 100;
-int Nroot = 2; // N-th root
-Complex[] function(Complex input){ // sqrt(1-z^2)
-  Complex[] r = getRoots(Complex.Sub(new Complex(-1,0), Complex.Pow(input,2)), 2);
-  Complex[] outs = new Complex[r.length];
-  for (int i = 0;i<outs.length;i++){
-    outs[i] = Complex.Sub(Complex.tanh(r[i]), Complex.Mul(new Complex(0,2), Complex.Mul(input, Complex.Div(r[i],Complex.Sub(new Complex(1,0), Complex.Mul(new Complex(2,0), Complex.Pow(input,2)))))));
-  }
-  return outs;
+Complex[] function(Complex input) { // sqrt(1-z^2)
+  return getRoots(Complex.Sub(new Complex(-1, 0), Complex.Pow(input, 2)), 2);
 }
+/*float minIm = -4;
+ float maxIm = 4;
+ float minRe = -4;
+ float maxRe = 4;
+ int steps = 50;
+ int Nroot = 2; // N-th root
+ Complex[] function(Complex input) { // sqrt(z)
+ return getRoots(input,Nroot);
+ }*/
+/*float minIm = -4*PI;
+ float maxIm = 4*PI;
+ float minRe = -4*PI;
+ float maxRe = 4*PI;
+ int steps = 125;
+ int Nroot = 2; // N-th root
+ Complex k = new Complex (4,4); 
+ Complex[] function(Complex input){ // tanh(k*sqrt(1-z^2))-2iz*sqrt(1-z^2)/(1-2z^2)
+ Complex[] r = getRoots(Complex.Sub(new Complex(-1,0), Complex.Pow(input,2)), 2);
+ Complex[] outs = new Complex[r.length];
+ for (int i = 0;i<outs.length;i++){
+ outs[i] = Complex.Sub(Complex.tanh(Complex.Mul(k,r[i])), Complex.Mul(new Complex(0,2), Complex.Mul(input, Complex.Div(r[i],Complex.Sub(new Complex(1,0), Complex.Mul(new Complex(2,0), Complex.Pow(input,2)))))));
+ }
+ return outs;
+ }*/
 
 boolean plotArg = false;
 
 boolean ImageArgumentColoring = true;
 
-boolean animateUnitCirclePath = true;
+boolean animateUnitCirclePath = false;
+double rad = 1;
 double unitCirclePathArg = 0;
 float animationSpeed = 1/float(Nroot);
+Complex lastUnitCircleImage;
 
 void setup() {
   size(500, 500, P3D);
@@ -50,14 +62,16 @@ void setup() {
     0.0001, 10000000);
   calcGraph();
   colorMode(HSB);
-  
+
   frameRate(60);
+
+  lastUnitCircleImage = function(new Complex(1, 0))[0];
 }
 
 /*Complex[] getMultiValuedFunctionVal(Complex input){
-  Complex[] roots = getRoots(input, Nroot);
-  Complex[] val = 
-}*/
+ Complex[] roots = getRoots(input, Nroot);
+ Complex[] val = 
+ }*/
 Complex[] getRoots(Complex input, int n) { // calculates all complex n-ths roots
   Complex[] roots = new Complex[n];
 
@@ -121,30 +135,42 @@ void draw() {
     stroke(d, 255, 255);
     point((float)p[0].real, (float)p[0].imag, (float)z);
   }
-  /*if (animateUnitCirclePath){ // draws the image of the unit-circle under the n-th root
+  if (animateUnitCirclePath) { // draws the image of the unit-circle under the n-th root
     stroke(255);
     strokeWeight(7);
-    Complex z = Complex.e_to_ix(unitCirclePathArg);
-    double imageArg = unitCirclePathArg/Nroot % (2*PI);
-    Complex image = Complex.e_to_ix(imageArg);
+    Complex z = Complex.Mul(new Complex(rad, 0), Complex.e_to_ix(unitCirclePathArg));
+    //Complex image = Complex.e_to_ix(imageArg);
+    Complex[] images = function(z);
+    Complex bestImage = images[0];
+    double d = -1;
+    for (Complex img : images) {
+      double l = (Complex.Sub(img, lastUnitCircleImage)).Abs();
+      if (d<0 || l<d) {
+        d = l;
+        bestImage = img;
+      }
+    }
+    // println(unitCirclePathArg
+    Complex image = bestImage;
+    lastUnitCircleImage = image;
     point((float)z.real, (float)z.imag, (float)(plotArg ? (image.Arg()+PI) % (2*PI) : image.real));
     //println(unitCirclePathArg,imageArg);
     unitCirclePathArg += 2*PI*animationSpeed/60.0;
-    if (unitCirclePathArg<2.05*PI*Nroot){
+    if (unitCirclePathArg<2.05*PI*Nroot) {
       unitCircleGraph.add(new Complex[]{
-        z,
+        z, 
         image
-      });
+        });
     }
     beginShape();
     strokeWeight(1);
-    for (int i=0;i<unitCircleGraph.size();i++){
+    for (int i=0; i<unitCircleGraph.size(); i++) {
       Complex p1 = unitCircleGraph.get(i)[0];
       Complex p2 = unitCircleGraph.get(i)[1];
       vertex((float)p1.real, (float)p1.imag, (float)(plotArg ? (p2.Arg()+PI) % (2*PI) : p2.real));
     }
     endShape();
-  }*/
+  }
   popMatrix();
   drawAxis();
 }
